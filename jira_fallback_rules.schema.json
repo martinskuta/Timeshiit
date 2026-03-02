@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://timeshiit.local/schemas/jira_fallback_rules.schema.json",
+  "title": "Timeshiit Jira fallback rules",
+  "description": "Rule file for `timelogs enrich --rules`. Rules are evaluated in order when Jira project/task fields are missing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Schema/rule-set version."
+    },
+    "rules": {
+      "type": "array",
+      "description": "Ordered fallback rules. First matching rule applies by default.",
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "whenAll",
+        "set"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable unique identifier for this rule."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable rule explanation."
+        },
+        "whenAll": {
+          "type": "array",
+          "description": "AND conditions. All must match.",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "whenAny": {
+          "type": "array",
+          "description": "Optional OR conditions. If provided, at least one must match.",
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "set": {
+          "$ref": "#/$defs/setAction"
+        },
+        "stopProcessing": {
+          "type": "boolean",
+          "description": "When true (default), stop evaluating after this rule matches."
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "column",
+        "operator",
+        "value"
+      ],
+      "properties": {
+        "column": {
+          "type": "string",
+          "description": "Input field name from the timesheet row or Jira issue type.",
+          "enum": [
+            "date",
+            "clientName",
+            "projectName",
+            "taskName",
+            "emailId",
+            "jiraNo",
+            "hours",
+            "comment",
+            "issueType"
+          ]
+        },
+        "operator": {
+          "type": "string",
+          "description": "Comparison function. Combine operators by adding multiple conditions.",
+          "enum": [
+            "equals",
+            "contains",
+            "startsWith",
+            "endsWith",
+            "regex"
+          ]
+        },
+        "value": {
+          "type": "string",
+          "description": "Expected value or regex pattern."
+        },
+        "ignoreCase": {
+          "type": "boolean",
+          "description": "Case-insensitive matching flag for string operators and regex."
+        }
+      }
+    },
+    "setAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Assignments to apply when the rule matches.",
+      "properties": {
+        "clientName": {
+          "type": "string",
+          "description": "Sets row.ClientName."
+        },
+        "projectName": {
+          "type": "string",
+          "description": "Sets row.ProjectName."
+        },
+        "taskName": {
+          "type": "string",
+          "description": "Sets row.TaskName."
+        }
+      },
+      "minProperties": 1
+    }
+  }
+}

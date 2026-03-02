@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "id": "starts-with-basic",
+      "description": "Basic startsWith mapping on jiraNo.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "startsWith",
+          "value": "TICKET-"
+        }
+      ],
+      "set": {
+        "clientName": "Google",
+        "projectName": "GOGL-Product",
+        "taskName": "RM-AI AI"
+      }
+    },
+    {
+      "id": "combined-startswith-and-endswith",
+      "description": "Combine operators on the same column (startsWith + endsWith) and add issueType equals.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "startsWith",
+          "value": "GOGL-"
+        },
+        {
+          "column": "jiraNo",
+          "operator": "endsWith",
+          "value": "-BUG"
+        },
+        {
+          "column": "issueType",
+          "operator": "equals",
+          "value": "Bug"
+        }
+      ],
+      "set": {
+        "projectName": "Chrome",
+        "taskName": "PROD-BUGS - Product Bugs"
+      }
+    },
+    {
+      "id": "contains-with-when-any",
+      "description": "Use whenAny with contains to match either comment text or current task text.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "startsWith",
+          "value": "SUP-"
+        }
+      ],
+      "whenAny": [
+        {
+          "column": "comment",
+          "operator": "contains",
+          "value": "urgent"
+        },
+        {
+          "column": "taskName",
+          "operator": "contains",
+          "value": "support"
+        }
+      ],
+      "set": {
+        "clientName": "Google",
+        "projectName": "GOGL-SUPPORT",
+        "taskName": "SUP - Priority Support"
+      }
+    },
+    {
+      "id": "regex-on-jira",
+      "description": "Regex example on jiraNo.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "regex",
+          "value": "^PRD-[0-9]{3,}$"
+        }
+      ],
+      "set": {
+        "projectName": "Chrome",
+        "taskName": "PROD - General Product Work"
+      }
+    },
+    {
+      "id": "case-sensitive-equals",
+      "description": "equals with ignoreCase=false (exact case-sensitive comparison).",
+      "whenAll": [
+        {
+          "column": "clientName",
+          "operator": "equals",
+          "value": "Google",
+          "ignoreCase": false
+        },
+        {
+          "column": "projectName",
+          "operator": "equals",
+          "value": "Chrome",
+          "ignoreCase": false
+        }
+      ],
+      "set": {
+        "taskName": "GEN - Product Work"
+      },
+      "stopProcessing": false
+    },
+    {
+      "id": "email-domain-routing",
+      "description": "Match on emailId with contains. stopProcessing=false allows later rules to refine task/project.",
+      "whenAll": [
+        {
+          "column": "emailId",
+          "operator": "contains",
+          "value": "@gmail.com"
+        }
+      ],
+      "set": {
+        "clientName": "Microsoft"
+      },
+      "stopProcessing": false
+    },
+    {
+      "id": "date-and-hours",
+      "description": "Match using date (yyyy-MM-dd) and hours (invariant string).",
+      "whenAll": [
+        {
+          "column": "date",
+          "operator": "equals",
+          "value": "2026-01-31"
+        },
+        {
+          "column": "hours",
+          "operator": "equals",
+          "value": "8"
+        }
+      ],
+      "set": {
+        "projectName": "Chrome",
+        "taskName": "SPRINT-PLANNING - Sprint Planning"
+      }
+    },
+    {
+      "id": "lab-when-any-issue-type",
+      "description": "Use whenAny for multiple issueType values under one jira prefix.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "startsWith",
+          "value": "LAB-"
+        }
+      ],
+      "whenAny": [
+        {
+          "column": "issueType",
+          "operator": "equals",
+          "value": "Story"
+        },
+        {
+          "column": "issueType",
+          "operator": "equals",
+          "value": "Task"
+        }
+      ],
+      "set": {
+        "projectName": "Chrome",
+        "taskName": "R&D - Innovation"
+      },
+      "stopProcessing": false
+    },
+    {
+      "id": "lab-regex-comment-refinement",
+      "description": "Refine a previous LAB rule using regex on comment.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "startsWith",
+          "value": "LAB-"
+        },
+        {
+          "column": "comment",
+          "operator": "regex",
+          "value": "prototype|spike"
+        }
+      ],
+      "set": {
+        "taskName": "R&D - Prototype Spikes"
+      }
+    },
+    {
+      "id": "ends-with-only-demo",
+      "description": "Standalone endsWith example.",
+      "whenAll": [
+        {
+          "column": "jiraNo",
+          "operator": "endsWith",
+          "value": "-HOTFIX"
+        }
+      ],
+      "set": {
+        "projectName": "Chrome",
+        "taskName": "HOTFIX - Emergency Fixes"
+      }
+    }
+  ]
+}
