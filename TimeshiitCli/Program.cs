@@ -54,7 +54,7 @@ Command ConfigureInitCommand()
     initCommand.Add(initJobsCommand);
 
     var initDependenciesCommand = new Command("dependencies",
-        "Downloads Atlassian CLI (acli.exe) into the current working directory");
+        "Downloads Atlassian CLI (acli.exe) and Zoho CLI (zcli.exe) into the current working directory");
     initDependenciesCommand.SetAction(_ => commandFactory.CreateInitDependenciesCommand().Execute());
     initCommand.Add(initDependenciesCommand);
 

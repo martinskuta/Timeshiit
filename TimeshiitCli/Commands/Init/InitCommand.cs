@@ -4,8 +4,10 @@ public sealed class InitCommand(CommandFactory cmdFactory, DirectoryInfo outputF
 {
     protected override async Task ExecuteInternal(CancellationToken cancellationToken)
     {
-        await cmdFactory.CreateInitLeavesCommand(outputFolder, year).Execute(cancellationToken);
-        await cmdFactory.CreateInitJobsCommand(outputFolder).Execute(cancellationToken);
+        await Task.WhenAll(
+            cmdFactory.CreateInitLeavesCommand(outputFolder, year).Execute(cancellationToken),
+            cmdFactory.CreateInitJobsCommand(outputFolder).Execute(cancellationToken),
+            cmdFactory.CreateInitDependenciesCommand().Execute(cancellationToken));
 
         Console.WriteLine("Initialization completed");
     }
