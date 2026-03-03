@@ -30,6 +30,7 @@ jobs:
 
       - name: Resolve release metadata
         shell: pwsh
+        id: version
         env:
           INPUT_VERSION: ${{ inputs.version }}
           INPUT_TAG: ${{ inputs.tag }}
@@ -65,6 +66,10 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "ASSEMBLY_VERSION=$assemblyVersion"
           Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_TAG=$tag"
           Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_NAME=Timeshiit $version"
+          
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "assembly_version=$assemblyVersion" >> $env:GITHUB_OUTPUT
 
       - name: Publish AOT executable
         shell: pwsh
@@ -87,15 +92,36 @@ jobs:
             --nologo
 
       - name: Prepare release asset
+        id: asset
         shell: pwsh
         run: |
-          $sourceExe = Resolve-Path .\artifacts\publish\TimeshiitCli.exe -ErrorAction Stop
-          Copy-Item -Path $sourceExe -Destination .\artifacts\timeshiit.exe -Force
+          $publishDir = Join-Path $PWD "artifacts\publish"
+          $sourceExe = Join-Path $publishDir "TimeshiitCli.exe"
 
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          name: ${{ env.RELEASE_NAME }}
-          files: artifacts\timeshiit.exe
-          fail_on_unmatched_files: true
+          if (-not (Test-Path $sourceExe)) {
+            $publishExes = @(Get-ChildItem -Path $publishDir -File -Filter "*.exe")
+            if ($publishExes.Count -ne 1) {
+              Write-Error "Expected TimeshiitCli.exe or a single executable in publish output; found $($publishExes.Count)."
+              exit 1
+            }
+
+            $sourceExe = $publishExes[0].FullName
+          }
+
+          $releaseDir = Join-Path $PWD "artifacts\release"
+          New-Item -Path $releaseDir -ItemType Directory -Force | Out-Null
+
+          $assetPath = Join-Path $releaseDir "timeshiit.exe"
+          Copy-Item -Path $sourceExe -Destination $assetPath -Force
+          "asset_path=$assetPath" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.asset.outputs.asset_path }}" `
+            --title "${{ steps.version.outputs.tag }}" `
+            --generate-notes `
+            --latest `
+            --target "${{ github.sha }}"
