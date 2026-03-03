@@ -34,6 +34,12 @@ dotnet build .\TimeshiitCli\TimeshiitCli.csproj
 .\TimeshiitCli\bin\Debug\net10.0\TimeshiitCli.exe -h
 ```
 
+## GitHub release workflow
+
+- Workflow file: `.github/workflows/release.yml`
+- Trigger manually with `version` (required) and `tag` (optional, defaults to `v<version>`)
+- Builds a Windows AOT executable and publishes one GitHub release asset: `timeshiit.exe`
+
 ## CLI help printouts (from `.exe -h`)
 
 The blocks below are direct printouts from `TimeshiitCli.exe`.

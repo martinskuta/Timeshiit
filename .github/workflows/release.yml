@@ -1,0 +1,101 @@
+name: Publish release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to stamp into the build (for example 1.2.3)
+        required: true
+        type: string
+      tag:
+        description: Release tag (defaults to v<version>)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  publish-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Resolve release metadata
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          $version = $env:INPUT_VERSION.Trim()
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Input 'version' is required."
+          }
+
+          $numericPart = ($version -split '[-+]', 2)[0]
+          $segments = $numericPart.Split('.')
+          if ($segments.Count -lt 1 -or $segments.Count -gt 4) {
+            throw "Version '$version' must have 1 to 4 numeric segments."
+          }
+
+          foreach ($segment in $segments) {
+            if ($segment -notmatch '^\d+$') {
+              throw "Version '$version' has a non-numeric segment '$segment'."
+            }
+          }
+
+          while ($segments.Count -lt 4) {
+            $segments += '0'
+          }
+
+          $assemblyVersion = $segments -join '.'
+          $tag = $env:INPUT_TAG
+          if ([string]::IsNullOrWhiteSpace($tag)) {
+            $tag = "v$version"
+          }
+
+          Add-Content -Path $env:GITHUB_ENV -Value "APP_VERSION=$version"
+          Add-Content -Path $env:GITHUB_ENV -Value "ASSEMBLY_VERSION=$assemblyVersion"
+          Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_TAG=$tag"
+          Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_NAME=Timeshiit $version"
+
+      - name: Publish AOT executable
+        shell: pwsh
+        run: |
+          if (Test-Path .\artifacts) {
+            Remove-Item .\artifacts -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path .\artifacts\publish | Out-Null
+
+          dotnet publish .\TimeshiitCli\TimeshiitCli.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained true `
+            -p:PublishAot=true `
+            -p:Version=$env:APP_VERSION `
+            -p:AssemblyVersion=$env:ASSEMBLY_VERSION `
+            -p:FileVersion=$env:ASSEMBLY_VERSION `
+            -p:InformationalVersion=$env:APP_VERSION `
+            -o .\artifacts\publish `
+            --nologo
+
+      - name: Prepare release asset
+        shell: pwsh
+        run: |
+          $sourceExe = Resolve-Path .\artifacts\publish\TimeshiitCli.exe -ErrorAction Stop
+          Copy-Item -Path $sourceExe -Destination .\artifacts\timeshiit.exe -Force
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          files: artifacts\timeshiit.exe
+          fail_on_unmatched_files: true
