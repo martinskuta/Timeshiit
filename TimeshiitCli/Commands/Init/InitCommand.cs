@@ -8,7 +8,8 @@ public sealed class InitCommand(CommandFactory cmdFactory, DirectoryInfo outputF
 
         await Task.WhenAll(
             cmdFactory.CreateInitLeavesCommand(outputFolder, year).Execute(cancellationToken),
-            cmdFactory.CreateInitJobsCommand(outputFolder).Execute(cancellationToken));
+            cmdFactory.CreateInitJobsCommand(outputFolder).Execute(cancellationToken),
+            cmdFactory.CreateInitFallbackRulesCommand(outputFolder).Execute(cancellationToken));
 
         Console.WriteLine("Initialization completed");
     }

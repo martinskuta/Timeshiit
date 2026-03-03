@@ -14,6 +14,8 @@ public class CommandFactory
 
     public InitDependenciesCommand CreateInitDependenciesCommand() => new();
 
+    public InitFallbackRulesCommand CreateInitFallbackRulesCommand(DirectoryInfo outputFolder) => new(outputFolder);
+
     public TimelogsCleanupCommand CreateTimelogsCleanupCommand(FileInfo timelogsCsvFilePath, string zohoDateFormat,
         DateOnly? fromDate, DateOnly? toDate) => new(timelogsCsvFilePath, zohoDateFormat, fromDate, toDate);
 

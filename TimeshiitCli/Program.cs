@@ -58,6 +58,16 @@ Command ConfigureInitCommand()
     initDependenciesCommand.SetAction(_ => commandFactory.CreateInitDependenciesCommand().Execute());
     initCommand.Add(initDependenciesCommand);
 
+    var initFallbackRulesCommand = new Command("fallbackrules",
+        "Creates the jira_fallback_rules.example.json and jira_fallback_rules.schema.json files in the output folder");
+    initFallbackRulesCommand.Options.Add(outputFolderOption);
+    initFallbackRulesCommand.SetAction(ctx =>
+    {
+        var outputFolder = ctx.GetRequiredValue(outputFolderOption);
+        return commandFactory.CreateInitFallbackRulesCommand(outputFolder).Execute();
+    });
+    initCommand.Add(initFallbackRulesCommand);
+
     initCommand.SetAction(ctx =>
     {
         var outputFolder = ctx.GetRequiredValue(outputFolderOption);
