@@ -92,7 +92,7 @@ Command ConfigureTimelogsCommand()
     fromDateOption.CustomParser =
         result => ParseDate(result, result.GetRequiredValue(zohoOrganizationDateFormatOption));
 
-    var toDateOption = new Option<DateOnly?>("--fromDate", "-f");
+    var toDateOption = new Option<DateOnly?>("--toDate", "-t");
     toDateOption.Description =
         $"'To' date (inclusive). Optional param to remove entries that are out of range. Default format is {dateFormat}, otherwise will use value of --zoho-date-format for parsing this argument";
     toDateOption.CustomParser =
