@@ -78,7 +78,12 @@ public sealed class TimelogsEnrichCommand(
         CancellationToken cancellationToken)
     {
         var jiraNo = row.JiraNo.Trim();
-        if (string.IsNullOrWhiteSpace(jiraNo)) return;
+        if (string.IsNullOrWhiteSpace(jiraNo) &&
+            (string.IsNullOrWhiteSpace(row.TaskName) || row.TaskName == "ASK BOJAN"))
+        {
+            if (!fallbackRuleEngine.TryApply(row, string.Empty)) SetAskBojan(row);
+            return;
+        }
 
         var (projectName, taskName, issueType) = await GetZohoDataFromJiraRecursive(jiraNo, cache, cancellationToken);
 

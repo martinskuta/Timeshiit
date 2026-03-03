@@ -21,6 +21,10 @@ internal sealed class JiraFallbackRuleEngine(IReadOnlyList<JiraFallbackRule> rul
 
     private static readonly HashSet<string> SupportedOperators = new(StringComparer.OrdinalIgnoreCase)
     {
+        "empty",
+        "notempty",
+        "blank",
+        "notblank",
         "equals",
         "contains",
         "startsWith",
@@ -104,7 +108,11 @@ internal sealed class JiraFallbackRuleEngine(IReadOnlyList<JiraFallbackRule> rul
             }
 
             // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-            if (condition.Value is null)
+            if (condition.Value is null && !(condition.Operator.Equals("empty", StringComparison.OrdinalIgnoreCase) ||
+                                             condition.Operator.Equals("blank", StringComparison.OrdinalIgnoreCase) ||
+                                             condition.Operator.Equals("notEmpty",
+                                                 StringComparison.OrdinalIgnoreCase) ||
+                                             condition.Operator.Equals("notBlank", StringComparison.OrdinalIgnoreCase)))
             {
                 errors.Add($"{label}: 'value' is required.");
                 continue;
@@ -147,6 +155,10 @@ internal sealed class JiraFallbackRuleEngine(IReadOnlyList<JiraFallbackRule> rul
 
         return condition.Operator.ToLowerInvariant() switch
         {
+            "empty" => string.IsNullOrEmpty(actual),
+            "notempty" => !string.IsNullOrEmpty(actual),
+            "blank" => string.IsNullOrWhiteSpace(actual),
+            "notblank" => !string.IsNullOrWhiteSpace(actual),
             "equals" => string.Equals(actual, condition.Value, comparison),
             "contains" => actual.Contains(condition.Value, comparison),
             "startswith" => actual.StartsWith(condition.Value, comparison),

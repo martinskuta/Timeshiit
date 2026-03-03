@@ -93,6 +93,10 @@
           "type": "string",
           "description": "Comparison function. Combine operators by adding multiple conditions.",
           "enum": [
+            "empty",
+            "notEmpty",
+            "blank",
+            "notBlank",
             "equals",
             "contains",
             "startsWith",
