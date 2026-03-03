@@ -38,7 +38,10 @@ dotnet build .\TimeshiitCli\TimeshiitCli.csproj
 ## GitHub release workflow
 
 - Workflow file: `.github/workflows/release.yml`
-- Trigger manually with `version` (required) and `tag` (optional, defaults to `v<version>`)
+- Base version file: `.release-version` (contains `Major.Minor`, for example `0.1`)
+- Trigger manually with optional `tag`; the workflow computes version as `<Major>.<Minor>.<Patch>`
+- Patch starts at `0` and auto-increments from existing `v<Major>.<Minor>.*` tags
+- Updating `.release-version` to a new `Major.Minor` resets patch back to `0`
 - Builds a Windows AOT executable and publishes one GitHub release asset: `timeshiit.exe`
 
 ## CLI help printouts (from `.exe -h`)
@@ -323,3 +326,4 @@ Validation checks include:
 
 - `init jobs` currently completes without generating `jobs.json`; supply this file from your own export/source.
 - Default file paths and years shown in help output reflect the current working directory and current year.
+

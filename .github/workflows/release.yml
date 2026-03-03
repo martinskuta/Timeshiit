@@ -3,12 +3,8 @@ name: Publish release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: Version to stamp into the build (for example 1.2.3)
-        required: true
-        type: string
       tag:
-        description: Release tag (defaults to v<version>)
+        description: Release tag override (defaults to v<computed version>)
         required: false
         type: string
 
@@ -22,6 +18,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -32,13 +31,37 @@ jobs:
         shell: pwsh
         id: version
         env:
-          INPUT_VERSION: ${{ inputs.version }}
           INPUT_TAG: ${{ inputs.tag }}
         run: |
-          $version = $env:INPUT_VERSION.Trim()
-          if ([string]::IsNullOrWhiteSpace($version)) {
-            throw "Input 'version' is required."
+          $versionFile = ".release-version"
+          if (-not (Test-Path $versionFile)) {
+            throw "Version file '$versionFile' was not found."
           }
+
+          $majorMinor = (Get-Content -Path $versionFile -Raw).Trim()
+          if ($majorMinor -notmatch '^\d+\.\d+$') {
+            throw "Version file '$versionFile' must contain Major.Minor (for example 1.2)."
+          }
+
+          $tagPrefix = "v$majorMinor."
+          $maxPatch = -1
+          foreach ($existingTag in @(git tag --list "$tagPrefix*")) {
+            if (-not $existingTag.StartsWith($tagPrefix)) {
+              continue
+            }
+
+            $patchText = $existingTag.Substring($tagPrefix.Length)
+            if ($patchText -notmatch '^\d+$') {
+              continue
+            }
+
+            $patchCandidate = [int]$patchText
+            if ($patchCandidate -gt $maxPatch) {
+              $maxPatch = $patchCandidate
+            }
+          }
+
+          $version = "$majorMinor.$($maxPatch + 1)"
 
           $numericPart = ($version -split '[-+]', 2)[0]
           $segments = $numericPart.Split('.')
@@ -58,7 +81,7 @@ jobs:
 
           $assemblyVersion = $segments -join '.'
           $tag = $env:INPUT_TAG
-          if ([string]::IsNullOrWhiteSpace($tag)) {
+          if ($null -eq $tag -or $tag.Trim().Length -eq 0) {
             $tag = "v$version"
           }
 
@@ -66,7 +89,7 @@ jobs:
           Add-Content -Path $env:GITHUB_ENV -Value "ASSEMBLY_VERSION=$assemblyVersion"
           Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_TAG=$tag"
           Add-Content -Path $env:GITHUB_ENV -Value "RELEASE_NAME=Timeshiit $version"
-          
+
           "version=$version" >> $env:GITHUB_OUTPUT
           "tag=$tag" >> $env:GITHUB_OUTPUT
           "assembly_version=$assemblyVersion" >> $env:GITHUB_OUTPUT
@@ -125,3 +148,4 @@ jobs:
             --generate-notes `
             --latest `
             --target "${{ github.sha }}"
+
