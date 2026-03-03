@@ -81,7 +81,7 @@ public sealed class TimelogsEnrichCommand(
         if (string.IsNullOrWhiteSpace(jiraNo) &&
             (string.IsNullOrWhiteSpace(row.TaskName) || row.TaskName == "ASK BOJAN"))
         {
-            if (!fallbackRuleEngine.TryApply(row, string.Empty)) SetAskBojan(row);
+            fallbackRuleEngine.TryApply(row, string.Empty);
             return;
         }
 
