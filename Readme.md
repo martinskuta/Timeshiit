@@ -8,6 +8,7 @@ enrichment, and validation checks.
 - Initialize supporting data files (`init`)
     - `init leaves`: pulls leave/holiday data from Zoho CLI and writes `leaves_<year>.json`
     - `init jobs`: command exists, currently no-op in this revision
+  - `init dependencies`: downloads Atlassian CLI (`acli.exe`) into the current working directory
 - Process timesheet CSV files (`timelogs`)
     - `cleanup`: normalizes/removes rows (weekends, leaves/holidays, out-of-range dates)
     - `enrich`: maps Jira data to Zoho client/project/task values
@@ -73,6 +74,7 @@ Options:
 Commands:
   leaves  Initializes leaves + holidays file for the tool to use for lookup of holidays. Requires ZohoCLI.exe binary
   jobs    Initializes jobs for the tool to use for lookup of clientName, projectName and taskName
+  dependencies  Downloads Atlassian CLI (acli.exe) into the current working directory
 ```
 
 ### `TimeshiitCli.exe init leaves -h`

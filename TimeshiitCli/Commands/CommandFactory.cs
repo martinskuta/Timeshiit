@@ -12,6 +12,8 @@ public class CommandFactory
 
     public InitJobsCommand CreateInitJobsCommand(DirectoryInfo outputFolder) => new(outputFolder);
 
+    public InitDependenciesCommand CreateInitDependenciesCommand() => new();
+
     public TimelogsCleanupCommand CreateTimelogsCleanupCommand(FileInfo timelogsCsvFilePath, string zohoDateFormat,
         DateOnly? fromDate, DateOnly? toDate) => new(timelogsCsvFilePath, zohoDateFormat, fromDate, toDate);
 
