@@ -78,8 +78,8 @@ public sealed class TimelogsEnrichCommand(
         CancellationToken cancellationToken)
     {
         var jiraNo = row.JiraNo.Trim();
-        if (string.IsNullOrWhiteSpace(jiraNo) &&
-            (string.IsNullOrWhiteSpace(row.TaskName) || row.TaskName == "ASK BOJAN"))
+        //If there is no jira ticket available try fall back rules
+        if (string.IsNullOrWhiteSpace(jiraNo) && string.IsNullOrWhiteSpace(row.TaskName))
         {
             fallbackRuleEngine.TryApply(row, string.Empty);
             return;
@@ -87,19 +87,36 @@ public sealed class TimelogsEnrichCommand(
 
         var (projectName, taskName, issueType) = await GetZohoDataFromJiraRecursive(jiraNo, cache, cancellationToken);
 
+        //We could find job info in JIRA
         if (!string.IsNullOrWhiteSpace(projectName) && !string.IsNullOrWhiteSpace(taskName))
         {
-            var job = jobMatcher.FindBest(projectName, taskName);
+            EnrichRowWithJobInfoAndCache(row, jobMatcher, cache, projectName, taskName, jiraNo, issueType);
+            return;
+        }
 
-            row.ClientName = job.ClientName;
-            row.ProjectName = job.ProjectName;
-            row.TaskName = job.JobName;
-
+        //Try fallback rules
+        if (fallbackRuleEngine.TryApply(row, issueType))
+        {
             UpdateCache(cache, jiraNo, row.ClientName, row.ProjectName, row.TaskName, issueType ?? string.Empty);
             return;
         }
 
-        if (!fallbackRuleEngine.TryApply(row, issueType)) SetAskBojan(row);
+        //We didn't find job info in JIRA, no matching fallback rule, but AI filled out the job info, use those
+        if (!string.IsNullOrWhiteSpace(row.ProjectName) && !string.IsNullOrWhiteSpace(row.TaskName))
+        {
+            EnrichRowWithJobInfoAndCache(row, jobMatcher, cache, row.ProjectName, row.TaskName, jiraNo, issueType);
+        }
+    }
+
+    private static void EnrichRowWithJobInfoAndCache(TimesheetRow row, JobMatcher jobMatcher,
+        ConcurrentDictionary<string, (string clientName, string projectName, string taskname, string issueType)> cache,
+        string projectName, string taskName, string jiraNo, string? issueType)
+    {
+        var job = jobMatcher.FindBest(projectName, taskName);
+
+        row.ClientName = job.ClientName;
+        row.ProjectName = job.ProjectName;
+        row.TaskName = job.JobName;
 
         UpdateCache(cache, jiraNo, row.ClientName, row.ProjectName, row.TaskName, issueType ?? string.Empty);
     }
