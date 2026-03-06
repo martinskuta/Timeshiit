@@ -29,21 +29,28 @@ public abstract class TimelogsCommandBase(FileInfo timelogsCsvFilePath, string z
         ConsoleUtil.ShowErrorAndExit($"The csv file '{timelogsCsvFilePath}' does not exist");
     }
 
-    protected async Task<List<TimesheetRow>> BuildRows(CancellationToken cancellationToken = default)
+    protected Task<List<TimesheetRow>> BuildRows(CancellationToken cancellationToken = default)
     {
-        VerifyTimelogsFileExists();
+        try
+        {
+            VerifyTimelogsFileExists();
 
-        using var reader = new Sep(',')
-            .Reader(o => o with
-            {
-                HasHeader = true,
-                Trim = SepTrim.None,
-                DisableColCountCheck = true
-            })
-            .FromFile(timelogsCsvFilePath.FullName);
+            using var reader = new Sep(',')
+                .Reader(o => o with
+                {
+                    HasHeader = true,
+                    Trim = SepTrim.None,
+                    DisableColCountCheck = true
+                })
+                .FromFile(timelogsCsvFilePath.FullName);
 
-        VerifyHeaders(reader);
-        return reader.ParallelEnumerate(ParseRow).AsParallel().AsOrdered().ToList();
+            VerifyHeaders(reader);
+            return Task.FromResult(reader.ParallelEnumerate(ParseRow).AsParallel().AsOrdered().ToList());
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException<List<TimesheetRow>>(exception);
+        }
     }
 
     protected async Task SaveTimesheetFile(ParallelQuery<TimesheetRow> rows, CancellationToken cancellationToken)

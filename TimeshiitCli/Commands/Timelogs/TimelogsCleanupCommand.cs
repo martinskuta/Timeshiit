@@ -16,7 +16,6 @@ public sealed class TimelogsCleanupCommand(
     ];
 
     private readonly FileInfo _timelogsCsvFilePath = timelogsCsvFilePath;
-    private readonly string _zohoDateFormat = zohoDateFormat;
 
     protected override async Task ExecuteInternal(CancellationToken cancellationToken)
     {

@@ -6,8 +6,10 @@ public static class ProcessHelper
 {
     public static async Task<string> RunCommand(string binary, string command)
     {
+        binary = TimeshiitPath.ResolvePath(binary);
+
         VerifyZohoCliIsPresent(binary);
-        
+
         var processInfo = new ProcessStartInfo
         {
             FileName = binary,
@@ -26,12 +28,13 @@ public static class ProcessHelper
 
         var output = await process!.StandardOutput.ReadToEndAsync();
         var error = await process.StandardError.ReadToEndAsync();
-        
+
         await process.WaitForExitAsync();
 
         if (process.ExitCode != 0)
         {
-            ConsoleUtil.ShowErrorAndExit($"'{processInfo.FileName} {processInfo.Arguments}' command failed with exit code {process.ExitCode}: {error}");
+            ConsoleUtil.ShowErrorAndExit(
+                $"'{processInfo.FileName} {processInfo.Arguments}' command failed with exit code {process.ExitCode}: {error}");
         }
 
         return output;
@@ -39,6 +42,7 @@ public static class ProcessHelper
 
     private static void VerifyZohoCliIsPresent(string binary)
     {
-        if(!File.Exists(binary)) ConsoleUtil.ShowErrorAndExit($"{binary} not found! Please make sure the binary exists.");
+        if (!File.Exists(binary))
+            ConsoleUtil.ShowErrorAndExit($"{binary} not found! Please make sure the binary exists.");
     }
 }

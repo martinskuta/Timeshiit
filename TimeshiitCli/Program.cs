@@ -23,7 +23,7 @@ Command ConfigureInitCommand()
 
     var outputFolderOption = new Option<DirectoryInfo>("--outputFolder", "-o");
     outputFolderOption.Description = "The output folder for the tool where to create the init files";
-    outputFolderOption.DefaultValueFactory = _ => new DirectoryInfo(Directory.GetCurrentDirectory());
+    outputFolderOption.DefaultValueFactory = _ => new DirectoryInfo(AppContext.BaseDirectory);
     initCommand.Options.Add(outputFolderOption);
 
     var yearOption = new Option<int>("--year", "-y");
@@ -87,8 +87,7 @@ Command ConfigureTimelogsCommand()
     var timelogsCsvFilePathOption = new Option<FileInfo>("--timesheetCsv", "-csv");
     timelogsCsvFilePathOption.Description = "The timesheet.csv file to use";
     timelogsCsvFilePathOption.Required = true;
-    timelogsCsvFilePathOption.DefaultValueFactory =
-        _ => new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "timesheet.csv"));
+    timelogsCsvFilePathOption.DefaultValueFactory = _ => TimeshiitPath.ResolveFilePath("timesheet.csv");
 
     var zohoOrganizationDateFormatOption = new Option<string>("--zoho-date-format", "-df");
     zohoOrganizationDateFormatOption.Description =
@@ -130,14 +129,12 @@ Command ConfigureTimelogsCommand()
     var jobsFilePathOption = new Option<FileInfo>("--jobs", "-j");
     jobsFilePathOption.Description = "The jobs.json file containing all zoho jobs";
     jobsFilePathOption.Required = true;
-    jobsFilePathOption.DefaultValueFactory =
-        _ => new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "jobs.json"));
+    jobsFilePathOption.DefaultValueFactory = _ => TimeshiitPath.ResolveFilePath("jobs.json");
 
     var rulesFilePathOption = new Option<FileInfo>("--rules", "-r");
     rulesFilePathOption.Description =
         "Fallback Jira mapping rules file used only by enrich when Jira fields cannot resolve project/task";
-    rulesFilePathOption.DefaultValueFactory =
-        _ => new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "jira_fallback_rules.json"));
+    rulesFilePathOption.DefaultValueFactory = _ => TimeshiitPath.ResolveFilePath("jira_fallback_rules.json");
 
     var enrichCommand = new Command("enrich",
         "Enriches the timesheet.csv file with client/project/job information for zoho using information from JIRA. Requires Atlassian CLI (acli.exe binary)");
@@ -204,8 +201,7 @@ Command ConfigureValidateCommand()
 
     var rulesFilePathOption = new Option<FileInfo>("--rules", "-r");
     rulesFilePathOption.Description = "Fallback Jira mapping rules file to verify";
-    rulesFilePathOption.DefaultValueFactory =
-        _ => new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), "jira_fallback_rules.json"));
+    rulesFilePathOption.DefaultValueFactory = _ => TimeshiitPath.ResolveFilePath("jira_fallback_rules.json");
 
     var verifyRulesCommand = new Command("rules", "Verify fallback rules file");
     verifyRulesCommand.Options.Add(rulesFilePathOption);

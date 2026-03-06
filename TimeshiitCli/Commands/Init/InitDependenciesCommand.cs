@@ -24,7 +24,7 @@ public sealed class InitDependenciesCommand : CommandBase
             await httpClient.GetAsync(downloadUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var outputPath = Path.Combine(Directory.GetCurrentDirectory(), binaryName);
+        var outputPath = Path.Combine(AppContext.BaseDirectory, binaryName);
         await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         await using var fileStream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
         await responseStream.CopyToAsync(fileStream, cancellationToken);
